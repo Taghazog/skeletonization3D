@@ -11,6 +11,8 @@ Instructions
 Just as any CMake project:
 
     git clone git://github.com/Taghazog/skeletonization3D.git
+    cd skeletonization3D
+    mkdir build
     cd build
     cmake ..
     make -j
