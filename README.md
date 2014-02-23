@@ -1,9 +1,25 @@
-The goal of this little project is to skeletonize tubular objects from a binary 3D image, and find information from the skeleton. (The data is acquired from tomography and then binarized)
+Overview
+---------
+The goal of this little project is to skeletonize tubular objects from a binary 3D image, and find information from the skeleton.
 
-We use the 3D sequential Thinning algorithm from there : http://www.inf.u-szeged.hu/ipcg/publications/papers/Palagyi_etal_IPMI2001.pdf
+Dependencies
+------------
+- CMake 2.8.8 or greater
 
-To use it, simply open a command line and go into your build folder, then do 
+Instructions
+------------
+Just as any CMake project:
 
-"cmake .."
-"make"
-"./ped myImagePath"
+    git clone git://github.com/Taghazog/skeletonization3D.git
+    cd build
+    cmake ..
+    make -j
+    ./ped myImagePath
+
+Authors
+-------
+- Jerome Bouzillard <jerome.bouzillard@gmail.com>
+
+
+
+
