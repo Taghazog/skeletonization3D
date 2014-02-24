@@ -34,26 +34,32 @@ int main(int argc, char *argv[])
 
     char *thinned = new char[   h->dime.dim[1] * 
                                 h->dime.dim[2] *
-                                h->dime.dim[3]](); 
+                                h->dime.dim[3]]; 
 
     skeletonize(h, data, thinned);
-
+   /*
+     std::bitset<26> np(0b10000000001000000000010000);
+     std::cout << is_cond_2_satisfied(np) << std::endl; 
+*/
     delete(data);
     
 
 
     FILE *imageOF = fopen("printImageThinned.txt", "w");
-    for (int k = 0; k < 154; ++k)
+    for (int k = 0; k < h->dime.dim[3]; ++k)
     {
-        for(int i = 0; i < 154; ++i)
+        for(int i = 0; i < h->dime.dim[2]; ++i)
         {
-            for(int j = 0; j < 154; ++j)
-                fprintf(imageOF, "%d", thinned[k*154*154 + i*154 + j]);
+            for(int j = 0; j < h->dime.dim[1]; ++j)
+                fprintf(imageOF, "%d", thinned[k*h->dime.dim[2]*h->dime.dim[1] + i*h->dime.dim[1] + j]);
             fprintf(imageOF, "\n");
             
         }
         fprintf(imageOF, "\n\n\n\n");
     }    
+
+    fclose(imageOF);
+    delete(thinned);
 
     return 1;
 }
