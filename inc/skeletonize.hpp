@@ -130,7 +130,7 @@ int connected26(const std::bitset<26>& np, int i, bool *visited);
 bool is_cond_2_satisfied(const std::bitset<26>& np);
 
 /* THis is a recursive fonction adding neighbors connected  */
-int connected6_18(const std::bitset<26>& np, int i, bool *visited);
+void connected6_18(const std::bitset<26>& np, int i, bool *visited, std::bitset<6>& adjacent);
 
 /* This condition check if the white points in the neighbourhood       */
 /* of point p are 6 connected , to prevent from deleting p which would */

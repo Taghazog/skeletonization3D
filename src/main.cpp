@@ -57,6 +57,6 @@ int main(int argc, char *argv[])
 
     fclose(imageOF);
     delete(thinned);
-
+    
     return 1;
 }

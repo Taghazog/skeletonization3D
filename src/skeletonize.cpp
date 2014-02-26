@@ -48,7 +48,7 @@ void skeletonize(const ANALYZE_DSR *h, const char *data, char *thinned)
         thinned[*p] = 1;
     }
 
-   }
+}
 
 /*******************************************************************************
 *   subiter : Return the number of deleted points in the subiteration from
@@ -245,22 +245,24 @@ int connected26(const std::bitset<26>& np, int i, bool *visited)
 }
 
 
-/* This condition check if the white points in the neighbourhood        */
-/* of point p are 6 connected , to prevent from deleting p which would  */
-/* change topology of B set. (the key of the erosion thinning process)  */
+/* This condition check if the white points in the 6 neighbourhood      */
+/* of point p are 6 connected in 18-adjacency to keep the topology      */
+/* of B set. (the key of the erosion thinning process)  */
 bool is_cond_4_satisfied(const std::bitset<26>& np)
 {
     bool visited[18] = {false};
+    std::bitset<6> adjacent(0b000000);
     int i = 0;
     while(np[i])
     {
-        visited[i] = true;
+        visited[i] = true;        
         ++i;
     }
 
-    int res = connected6_18(np, i, visited); 
+    adjacent[i] = 1;
+    connected6_18(np, i, visited, adjacent); 
     
-    if(res != 18 - (np<<8).count())
+    if(adjacent.count() != 6 - (np[0] + np[1] + np[2] + np[3] + np[4] + np[5]))
     {
         return false;
     }     
@@ -269,19 +271,20 @@ bool is_cond_4_satisfied(const std::bitset<26>& np)
 }
 
 /* THis is a recursive fonction adding neighbors 6 connected in 18 set */
-int connected6_18(const std::bitset<26>& np, int i, bool *visited)
+void connected6_18(const std::bitset<26>& np, int i, bool *visited, std::bitset<6>& adjacent)
 {
-    unsigned short nb = 1;
     visited[i] = true;
     unsigned short ind;
     for(int j = indicesS6_18[i]; j < indicesS6_18[i+1]; ++j)
     {   
         ind = s6_18[j];    
         if(!visited[ind] && !np[ind])
-        {            
-            nb += connected6_18(np, ind, visited);
+        { 
+            if(ind >= 0 && ind < 6)
+            {
+                adjacent[ind] = 1;   
+            }                 
+            connected6_18(np, ind, visited, adjacent);
         }        
-    }
-
-    return nb;
+    }    
 }
