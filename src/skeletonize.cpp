@@ -154,7 +154,7 @@ const std::bitset<26> collect_26_neighbours( const boost::dynamic_bitset<> &data
     np.set(14, data[p + vertical + depth]);       //   D N
     np.set(15, data[p - 1 + vertical]);           // W D
     np.set(16, data[p + 1 + vertical]);           // E D
-    np.set(17, data[p + vertical + depth]);       //   D S
+    np.set(17, data[p + vertical - depth]);       //   D S
 
     /* 26-connected */
     np.set(18, data[p - 1 - vertical + depth]);   // W U N

@@ -6,6 +6,7 @@
 #include "analyze_loader.hpp"
 #include "skeletonize.hpp"
 
+
 int main(int argc, char *argv[])
 {
     
@@ -37,10 +38,9 @@ int main(int argc, char *argv[])
                                 h->dime.dim[3]]; 
 
     skeletonize(h, data, thinned);
+   
 
-    delete(data);
-    
-
+    delete(data);   
 
     FILE *imageOF = fopen("printImageThinned.txt", "w");
     for (int k = 0; k < h->dime.dim[3]; ++k)
