@@ -135,36 +135,36 @@ const std::bitset<26> collect_26_neighbours( const boost::dynamic_bitset<> &data
     int depth = h->dime.dim[2] * h->dime.dim[1];
     
     /*  6-connected */
-    np.set(0, data[p - vertical]);                // 4 :    U
-    np.set(1, data[p + depth]);                   // 10 :     N
-    np.set(2, data[p - 1]);                       // 12 : W
-    np.set(3, data[p + 1]);                       // 13 : E
-    np.set(4, data[p - depth]);                   // 15 :     S
-    np.set(5, data[p + vertical]);                // 21 :   D
+    np.set(0, data[p - vertical]);                //    U
+    np.set(1, data[p + depth]);                   //     N
+    np.set(2, data[p - 1]);                       // W
+    np.set(3, data[p + 1]);                       // E
+    np.set(4, data[p - depth]);                   //     S
+    np.set(5, data[p + vertical]);                //   D
 
     /* 18-connected */    
-    np.set(6, data[p - vertical + depth]);        // 1 :    U N
-    np.set(7, data[p - 1 - vertical]);            // 3 :  W U
-    np.set(8, data[p + 1 - vertical]);            // 5 :  E U
-    np.set(9, data[p - vertical - depth]);        // 7 :    U S
-    np.set(10, data[p - 1  + depth]);             // 9 :  W   N
-    np.set(11, data[p + 1 + depth]);              // 11 : E   N
-    np.set(12, data[p - 1 - depth]);              // 14 : W   S
-    np.set(13, data[p + 1 - depth]);              // 16 : E   S
-    np.set(14, data[p + vertical + depth]);       // 18 :   D N
-    np.set(15, data[p - 1 + vertical]);           // 20 : W D
-    np.set(16, data[p + 1 + vertical]);           // 22 : E D
-    np.set(17, data[p + vertical + depth]);       // 24 :   D S
+    np.set(6, data[p - vertical + depth]);        //   U N
+    np.set(7, data[p - 1 - vertical]);            // W U
+    np.set(8, data[p + 1 - vertical]);            // E U
+    np.set(9, data[p - vertical - depth]);        //   U S
+    np.set(10, data[p - 1  + depth]);             // W   N
+    np.set(11, data[p + 1 + depth]);              // E   N
+    np.set(12, data[p - 1 - depth]);              // W   S
+    np.set(13, data[p + 1 - depth]);              // E   S
+    np.set(14, data[p + vertical + depth]);       //   D N
+    np.set(15, data[p - 1 + vertical]);           // W D
+    np.set(16, data[p + 1 + vertical]);           // E D
+    np.set(17, data[p + vertical + depth]);       //   D S
 
     /* 26-connected */
-    np.set(18, data[p - 1 - vertical + depth]);   // 0 :  W U N
-    np.set(19, data[p + 1 - vertical + depth]);   // 2 :  E U N
-    np.set(20, data[p - 1 - vertical - depth]);   // 6 :  W U S
-    np.set(21, data[p + 1 - vertical - depth]);   // 8 :  E U S    
-    np.set(22, data[p - 1 + vertical + depth]);   // 17 : W D N
-    np.set(23, data[p + 1 + vertical + depth]);   // 19 : E D N
-    np.set(24, data[p - 1 + vertical - depth]);   // 23 : W D S    
-    np.set(25, data[p + 1 + vertical - depth]);   // 25 : E D S
+    np.set(18, data[p - 1 - vertical + depth]);   // W U N
+    np.set(19, data[p + 1 - vertical + depth]);   // E U N
+    np.set(20, data[p - 1 - vertical - depth]);   // W U S
+    np.set(21, data[p + 1 - vertical - depth]);   // E U S    
+    np.set(22, data[p - 1 + vertical + depth]);   // W D N
+    np.set(23, data[p + 1 + vertical + depth]);   // E D N
+    np.set(24, data[p - 1 + vertical - depth]);   // W D S    
+    np.set(25, data[p + 1 + vertical - depth]);   // E D S
 
     return np;
 }
@@ -210,13 +210,13 @@ bool is_cond_2_satisfied(const std::bitset<26>& np)
 {   
     bool visited[26] = {false};
     int i = 0;
-    while(np[i] == 0)
+    while(!np[i])
     {
         visited[i] = true;
         ++i;
     }
 
-    int res = connected(np, i, visited); 
+    int res = connected26(np, i, visited); 
 
     if(res != np.count())
     {
@@ -226,8 +226,8 @@ bool is_cond_2_satisfied(const std::bitset<26>& np)
     return true;
 }
 
-/* THis is a recursive fonction adding neighbors connected  */
-int connected(const std::bitset<26>& np, int i, bool *visited)
+/* THis is a recursive fonction adding neighbors 26 connected in itself */
+int connected26(const std::bitset<26>& np, int i, bool *visited)
 {
     unsigned short nb = 1;
     visited[i] = true;
@@ -235,9 +235,9 @@ int connected(const std::bitset<26>& np, int i, bool *visited)
     for(int j = indicesS26[i]; j < indicesS26[i+1]; ++j)
     {   
         ind = s26[j];    
-        if(!visited[ind] && np[ind] == 1)
+        if(!visited[ind] && np[ind])
         {            
-            nb += connected(np, ind, visited);
+            nb += connected26(np, ind, visited);
         }        
     }
 
@@ -249,44 +249,39 @@ int connected(const std::bitset<26>& np, int i, bool *visited)
 /* of point p are 6 connected , to prevent from deleting p which would  */
 /* change topology of B set. (the key of the erosion thinning process)  */
 bool is_cond_4_satisfied(const std::bitset<26>& np)
-{/*
-    int label = 0;
-    int L[18];
-    for( int i = 0; i < 18; ++i)
+{
+    bool visited[18] = {false};
+    int i = 0;
+    while(np[i])
     {
-        L[i] = 0;
+        visited[i] = true;
+        ++i;
     }
+
+    int res = connected6_18(np, i, visited); 
     
-    for( int i = 0; i < 18; ++i)
+    if(res != 18 - (np<<8).count())
     {
-        if( np[i] == 1 )
-        {
-            ++label;
-            L[i] = label;        
-        
-            for( int j = indicesS6[i]; j < indicesS6[i+1]; ++j)
-            {
-                if( L[s6[j]] > 0 )
-                {
-                    for( int k = 0; k < i; ++k)
-                    {
-                        if( L[k] == L[s6[j]] )
-                        {   
-                            L[k] = label;
-                        } 
-                    }            
-                }            
-            }   
-        }     
-    }    
-    
-    for( int i = 0; i < 18; ++i)
-    {
-        if ( np[i] == 1 && L[i] != label )
-        {
-            return false;
-        }        
-    }*/
-    
+        return false;
+    }     
+
     return true;
+}
+
+/* THis is a recursive fonction adding neighbors 6 connected in 18 set */
+int connected6_18(const std::bitset<26>& np, int i, bool *visited)
+{
+    unsigned short nb = 1;
+    visited[i] = true;
+    unsigned short ind;
+    for(int j = indicesS6_18[i]; j < indicesS6_18[i+1]; ++j)
+    {   
+        ind = s6_18[j];    
+        if(!visited[ind] && !np[ind])
+        {            
+            nb += connected6_18(np, ind, visited);
+        }        
+    }
+
+    return nb;
 }

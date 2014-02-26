@@ -37,10 +37,7 @@ int main(int argc, char *argv[])
                                 h->dime.dim[3]]; 
 
     skeletonize(h, data, thinned);
-   /*
-     std::bitset<26> np(0b10000000001000000000010000);
-     std::cout << is_cond_2_satisfied(np) << std::endl; 
-*/
+
     delete(data);
     
 
