@@ -13,19 +13,31 @@ void skeletonize(const ANALYZE_DSR *h, const char *data, char *thinned)
 {
 
     /*  copy the Black points set indices into an array */
-    /*  and create a copy of data with binary values */
-    const std::size_t size = h->dime.dim[1] * h->dime.dim[2] * h->dime.dim[3];
+    /*  and create a copy of data with binary values and zero borders */
+    const std::size_t size = (h->dime.dim[1] + 2) * (h->dime.dim[2] + 2) * (h->dime.dim[3] + 2);
     boost::dynamic_bitset<> data2(size);
     std::list<int> black_points_set;
     
-    for(int i = 0; i < size; ++i)
+    int depth, height, depth2, height2, ind;
+    for(int i = 0; i < h->dime.dim[3]; ++i)
     {
-        if(data[i] > 0 )
+        depth = i * h->dime.dim[2] * h->dime.dim[1];
+        depth2 = (i+1) * (h->dime.dim[2]+2) * (h->dime.dim[1]+2);
+        for(int j = 0; j < h->dime.dim[2]; ++j)
         {
-            data2[i] = 1;
-            black_points_set.push_back(i);         
-        }        
-    }
+            height = j * h->dime.dim[1];
+            height2 = (j+1) * (h->dime.dim[1]+2);
+            for(int k = 0; k < h->dime.dim[1]; ++k)
+            {                
+                if(data[depth + height + k] > 0 )
+                {
+                    ind = depth2 + height2 + k+1;
+                    data2[ind] = 1;
+                    black_points_set.push_back(ind);         
+                }   
+            }
+        }
+    }  
 
     int modified; 
     
@@ -33,19 +45,25 @@ void skeletonize(const ANALYZE_DSR *h, const char *data, char *thinned)
     do
     {
         modified = 0;
-        modified += subiter(data2, black_points_set, -h->dime.dim[1], h);                    // Up
-        modified += subiter(data2, black_points_set, h->dime.dim[1], h);                     // Down
-        modified += subiter(data2, black_points_set, h->dime.dim[1] * h->dime.dim[2], h);    // North
-        modified += subiter(data2, black_points_set, -h->dime.dim[1] * h->dime.dim[2], h);   // South
-        modified += subiter(data2, black_points_set, 1, h);                                  // East
-        modified += subiter(data2, black_points_set, -1, h);                                 // West
+        modified += subiter(data2, black_points_set, -(h->dime.dim[1]+2), h);                       // Up
+        modified += subiter(data2, black_points_set, h->dime.dim[1]+2, h);                          // Down
+        modified += subiter(data2, black_points_set, (h->dime.dim[1]+2) * (h->dime.dim[2]+2), h);   // North
+        modified += subiter(data2, black_points_set, -(h->dime.dim[1]+2) * (h->dime.dim[2]+2), h);  // South
+        modified += subiter(data2, black_points_set, 1, h);                                         // East
+        modified += subiter(data2, black_points_set, -1, h);                                        // West
 
     } while(modified > 0);
 
     /* copy the result into the thinned output */    
     for(std::list<int>::iterator p = black_points_set.begin(); p != black_points_set.end(); ++p)
     {
-        thinned[*p] = 1;
+        depth = (*p)/((h->dime.dim[1] + 2) * (h->dime.dim[2] + 2));
+        depth = (depth - 1) * h->dime.dim[1] * h->dime.dim[2];
+        height = ((*p) % ((h->dime.dim[1] + 2) * (h->dime.dim[2] + 2)))/(h->dime.dim[1] + 2);
+        height = (height - 1) * h->dime.dim[1];
+        ind = ((*p) % ((h->dime.dim[1] + 2) * (h->dime.dim[2] + 2))) % (h->dime.dim[1] + 2);
+        ind += depth + height - 1;
+        thinned[ind] = 1;
     }
 
 }
@@ -131,8 +149,8 @@ const std::bitset<26> collect_26_neighbours( const boost::dynamic_bitset<> &data
         up : p - width
         down : p + width
     */
-    int vertical = h->dime.dim[1];
-    int depth = h->dime.dim[2] * h->dime.dim[1];
+    int vertical = h->dime.dim[1]+2;
+    int depth = (h->dime.dim[2]+2) * (h->dime.dim[1]+2);
     
     /*  6-connected */
     np.set(0, data[p - vertical]);                //    U

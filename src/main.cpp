@@ -2,14 +2,13 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 
 #include "analyze_loader.hpp"
 #include "skeletonize.hpp"
 
-
 int main(int argc, char *argv[])
 {
-    
     ANALYZE_DSR *h = new ANALYZE_DSR;
 
     if(argc < 2)
@@ -30,33 +29,20 @@ int main(int argc, char *argv[])
                             h->dime.dim[2] *
                             h->dime.dim[3]];
     
-    anaReadImagedata(imageFilename.c_str(), h, 1, data);
-    
+    anaReadImagedata(imageFilename.c_str(), h, 1, data);    
 
     char *thinned = new char[   h->dime.dim[1] * 
                                 h->dime.dim[2] *
                                 h->dime.dim[3]]; 
 
-    skeletonize(h, data, thinned);
-   
+    memset(thinned, 0, h->dime.dim[1] * h->dime.dim[2] * h->dime.dim[3]);
 
-    delete(data);   
+    skeletonize(h, data, thinned);    
 
-    FILE *imageOF = fopen("printImageThinned.txt", "w");
-    for (int k = 0; k < h->dime.dim[3]; ++k)
-    {
-        for(int i = 0; i < h->dime.dim[2]; ++i)
-        {
-            for(int j = 0; j < h->dime.dim[1]; ++j)
-                fprintf(imageOF, "%d", thinned[k*h->dime.dim[2]*h->dime.dim[1] + i*h->dime.dim[1] + j]);
-            fprintf(imageOF, "\n");
-            
-        }
-        fprintf(imageOF, "\n\n\n\n");
-    }    
-
-    fclose(imageOF);
-    delete(thinned);
+    delete [] data;
+    delete [] thinned;
     
-    return 1;
+    return EXIT_SUCCESS;
+
 }
+
