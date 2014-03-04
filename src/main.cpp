@@ -19,11 +19,12 @@ int main(int argc, char *argv[])
     std::string headerFilename = argv[1];
     headerFilename = headerFilename + ".hdr";
     std::string imageFilename = argv[1];
+    std::string skeletonized_image = imageFilename + "_skeletonized.img";
     imageFilename = imageFilename + ".img";
     anaReadHeader(headerFilename.c_str(), h);
 
-    //FILE *headerOF = fopen("print.txt", "w");
-    //anaPrintHeader(h, headerOF);
+    FILE *headerOF = fopen("print.txt", "w");
+    anaPrintHeader(h, headerOF);
 
     char *data = new char[  h->dime.dim[1] * 
                             h->dime.dim[2] *
@@ -37,7 +38,9 @@ int main(int argc, char *argv[])
 
     memset(thinned, 0, h->dime.dim[1] * h->dime.dim[2] * h->dime.dim[3]);
 
-    skeletonize(h, data, thinned);    
+    skeletonize(h, data, thinned);  
+    
+    anaWriteImagedata(skeletonized_image.c_str(), h, thinned);
 
     delete [] data;
     delete [] thinned;

@@ -126,6 +126,7 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h);
 int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data);
 /*****************************************************************************/
 int anaWriteHeader(const char *filename, ANALYZE_DSR *h);
+int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const char *data);
 /*****************************************************************************/
 int anaPrintHeader(ANALYZE_DSR *h, FILE *fp);
 /*****************************************************************************/

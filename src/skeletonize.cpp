@@ -63,7 +63,7 @@ void skeletonize(const ANALYZE_DSR *h, const char *data, char *thinned)
         height = (height - 1) * h->dime.dim[1];
         ind = ((*p) % ((h->dime.dim[1] + 2) * (h->dime.dim[2] + 2))) % (h->dime.dim[1] + 2);
         ind += depth + height - 1;
-        thinned[ind] = 1;
+        thinned[ind] = 255;
     }
 
 }

@@ -23,42 +23,10 @@
 
     Turku PET Centre, Turku, Finland, http://www.turkupetcentre.fi/
 
-    Modification history:
-    2003-10-05 Vesa Oikonen
-        First created.
-    2003-12-05 VO
-        Included function anaFlipping().
-    2003-12-10 VO
-        Setting of maximum nr of characters for string printing in
-        anaPrintHeader().
-    2004-02-05 VO
-        Change in function information, no change in compiled code.
-    2004-09-17 VO
-        Doxygen style comments.
-    2007-02-27 VO
-        Included functions anaRemove(), anaRemoveFNameExtension(),
-        anaDatabaseExists() and anaMakeSIFName().
-    2007-17-07 Harri Merisaari
-        modified anaRemoveFNameExtension(char *fname) for ANSI 
-        compatibility build option
-    2007-09-11 VO
-        Corrected a bug in anaRemoveFNameExtension().
-    2008-10-03 VO
-        AnaReadImageData() accepts ANALYZE_DT_FLOAT and ANALYZE_DT_SIGNED_INT
-        with both 16 and 32 bit pixel values (previously only 16 bits).
-        Function might need to be rewritten.
-    2008-10-09 VO
-        AnaReadImageData() accepts ANALYZE_DT_COMPLEX, since PVELab writes pixel
-        values in this (32/32) format.
-    2012-02-04 VO
-        Added function anaExistsNew() which may replace anaExist() at some point.
-    2012-02-28 VO
-        Fixed a tiny bug in test print in anaReadHeader().
-        Fixed a bad bug in anaExistsNew() leading to not identifying Analyze header.
-    2013-03-20 VO
-        Fixed a bug in anaWriteHeader(): buffers were not initially set to contain
-        zeroes as intended (anyway, no problem was ever encountered).
- 
+    -> Modifications by Jerome Bouzillard
+        anaReadHeader now reads correctly bytes.
+        anaWriteImagedata : adding this procedure to write image data into a file
+        (atm only write 3D images with char size values)
 
 ******************************************************************************/
 #include <cstdio>
@@ -193,54 +161,13 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h) {
     }
 
     /* Read Analyze header key */
-    int n = 0;
-    unsigned char c;
-    int ind = 0;
-    while(ind < ANALYZE_HEADER_KEY_SIZE)
-    {
-        n = fscanf(fp, "%2hhx", &c);
-
-        if(n != 1)
-        {
-            return 3;
-        }
-
-        buf1[ind++] = c;
-
-    }
-
-    ind = 0;
-
-    while(ind < ANALYZE_HEADER_IMGDIM_SIZE)
-    {
-        n = fscanf(fp, "%2hhx", &c);
-
-        if(n != 1)
-        {
-            return 3;
-        }
-
-        buf2[ind++] = c;
-
-    }  
-     
-    ind = 0;
-
-    /* Read Analyze header image data history */
-    memset(buf3, 0, sizeof(ANALYZE_HEADER_HISTORY_SIZE));
-
-    while(ind < ANALYZE_HEADER_HISTORY_SIZE)
-    {
-        n = fscanf(fp, "%2hhx", &c);
-
-        if(n != 1)
-        {
-            printf(" complete data_history not found.\n");        
-        }
-
-        buf3[ind++] = c;
-
-    }
+   if(fread(buf1, ANALYZE_HEADER_KEY_SIZE, 1, fp)<1) return(3);
+   /* Read Analyze header image dimension */
+   if(fread(buf2, ANALYZE_HEADER_IMGDIM_SIZE, 1, fp)<1) return(3);
+   /* Read Analyze header image data history */
+   memset(buf3, 0, sizeof(ANALYZE_HEADER_HISTORY));
+   ret=fread(buf3, ANALYZE_HEADER_HISTORY_SIZE, 1, fp);
+   if(ANALYZE_TEST>1 && ret<1) printf(" complete data_history not found.\n");
    
     /* Close file */
     fclose(fp);
@@ -430,6 +357,27 @@ int anaWriteHeader(
     fclose(fp);
 
     return(0);
+}
+/*****************************************************************************/
+
+/*****************************************************************************/
+int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const char *data)
+{
+    /* Open Image file for write */
+    FILE *fp;
+
+    fp = fopen(filename, "wb"); 
+    if(fp == NULL) 
+    {
+        return 2;
+    }
+    
+    size_t size = h->dime.dim[1] * h->dime.dim[2] * h->dime.dim[3];
+    if(fwrite(data, 1, size, fp)
+             != size)
+    {
+        fclose(fp); return(3);
+    }
 }
 /*****************************************************************************/
 
