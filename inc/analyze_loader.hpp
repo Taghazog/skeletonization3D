@@ -15,6 +15,7 @@
 #ifndef _ANALYZE_H
 #define _ANALYZE_H
 
+#include <cstdio>
 
 #ifdef __STRICT_ANSI__
 char* strdup(const char* s);
@@ -126,7 +127,7 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h);
 int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data);
 /*****************************************************************************/
 int anaWriteHeader(const char *filename, ANALYZE_DSR *h);
-int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const char *data);
+int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const unsigned char *data);
 /*****************************************************************************/
 int anaPrintHeader(ANALYZE_DSR *h, FILE *fp);
 /*****************************************************************************/

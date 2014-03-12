@@ -12,6 +12,6 @@ include_directories( ${PROJECT_SOURCE_DIR}/inc )
 
 
 # the list of source files
-set(ped_SRCS src/main.cpp src/analyze_loader.cpp src/swap.cpp src/skeletonize.cpp)
+set(ped_SRCS src/main.cpp src/analyze_loader.cpp src/swap.cpp src/tubular_object.cpp)
 
 add_executable(ped ${ped_SRCS})

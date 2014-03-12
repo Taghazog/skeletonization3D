@@ -361,7 +361,7 @@ int anaWriteHeader(
 /*****************************************************************************/
 
 /*****************************************************************************/
-int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const char *data)
+int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const unsigned char *data)
 {
     /* Open Image file for write */
     FILE *fp;
