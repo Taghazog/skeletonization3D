@@ -98,8 +98,8 @@ static int untransformed(int indice, const Sizes& sizes);
 static int findNode(const unsigned char *thinned, const Sizes& sizes, int np[26]);
 static void depth_search(int ind, Edge* edge, const unsigned char *data, const Sizes& sizes, bool * visited);
 
-void process_nodes_from_graph(const Node* node, std::vector<const Node*>& indices);
-void process_indices_from_graph(const Node* node, std::vector<int>& indices);
+static void process_nodes_from_graph(const Node* node, std::vector<const Node*>& indices);
+static void process_indices_from_graph(const Node* node, std::vector<int>& indices);
 
 /***********************************************  TubularObject  definition  ************************************************/
 
@@ -730,7 +730,7 @@ void depth_search(int ind, Edge* edge, const unsigned char *data, const Sizes& s
    
 }
 
-void process_nodes_from_graph(const Node* node, std::vector<const Node*>& nodes)
+static void process_nodes_from_graph(const Node* node, std::vector<const Node*>& nodes)
 {
     
     std::vector<Edge*> edges = node->edges();
@@ -741,7 +741,7 @@ void process_nodes_from_graph(const Node* node, std::vector<const Node*>& nodes)
     }
 }
 
-void process_indices_from_graph(const Node* node, std::vector<int>& indices)
+static void process_indices_from_graph(const Node* node, std::vector<int>& indices)
 {
     
     std::vector<Edge*> edges = node->edges();
@@ -756,31 +756,3 @@ void process_indices_from_graph(const Node* node, std::vector<int>& indices)
         process_indices_from_graph((*edge_it)->to(), indices);
     }
 }
-
- /* debug graph is correct */ 
-    /*
-    std::vector<const Node*> nodes;
-    std::vector<int> vertices;
-    nodes.push_back( mRoot);
-    vertices.push_back(mRoot->position());
-
-    process_nodes_from_graph(mRoot, nodes);
-    process_indices_from_graph(mRoot, vertices);
-
-    for (int i = 0; i < mSizes.size; ++i)
-    {
-
-        mData[i] = 0;
-    }
-    for (std::vector<const Node*>::const_iterator node_it = nodes.begin(); node_it != nodes.end(); ++node_it)
-    {
-        
-        mData[(*node_it)->position()] = 1;
-    }
-  
-    for (std::vector<int>::const_iterator ind_it = vertices.begin(); ind_it != vertices.end(); ++ind_it)
-    {
-        
-        mData[*ind_it] = 1;
-    }    
-*/
