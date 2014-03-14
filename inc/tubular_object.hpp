@@ -7,11 +7,11 @@
 #ifndef TUBULAR_OBJECT_HPP
 #define TUBULAR_OBJECT_HPP
 
+#include "analyze_loader.hpp"
+
 #include <cstdlib>
 #include <string>
 #include <vector>
-
-#include "analyze_loader.hpp"
 
 class Node;
 
@@ -46,6 +46,11 @@ public:
 public:
 	/* Getters */
     const unsigned char* data() const;
+    const unsigned char* nodes_data() const;
+    float bv_tv() const;
+    void tb_Th();
+    void tb_Sp();
+    void tb_Shape();
     const unsigned char* skeleton_data() const;
     const ANALYZE_DSR* dsr() const;
 
@@ -61,6 +66,7 @@ private:
 
 	unsigned char* mData;
 	unsigned char* mSkeleton;	
+
 	Node* mRoot;	
 
 	

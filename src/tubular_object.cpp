@@ -169,6 +169,25 @@ const unsigned char* TubularObject::data() const
     return mData;
 }   
 
+/* return an array with the indices of the nodes from the graph */
+const unsigned char* TubularObject::nodes_data() const
+{      
+    std::vector<const Node*> nodes;    
+    nodes.push_back( mRoot);   
+
+    process_nodes_from_graph(mRoot, nodes);   
+
+    unsigned char* data = new unsigned char[mSizes.size];
+    memset(data, 0, mSizes.size * sizeof(unsigned char));
+
+    for (std::vector<const Node*>::const_iterator node_it = nodes.begin(); node_it != nodes.end(); ++node_it)
+    {
+        if((*node_it)->connectivity() > 2)
+        data[(*node_it)->position()] = 1;
+    }  
+    return data;
+}  
+
 const unsigned char* TubularObject::skeleton_data() const
 {
     return mSkeleton;
@@ -179,11 +198,57 @@ const ANALYZE_DSR* TubularObject::dsr() const
     return mDsr;
 }  
 
+/********************************************************************
+* this function return the volume pourcentage bone/total
+*  this function assumes the image dimensions to be the same
+*  and the image being a sphere and not a cube. 
+*********************************************************************/
+float TubularObject::bv_tv() const
+{
+    const float pi = 3.14159265;
+    float total = 1.0/6.0 * pi * mSizes.size; // 4/3 * Pi * R^3
+    float nb_object_voxels = 0.0;
+
+    for (int i = 0; i < mSizes.size; ++i)
+    {
+        if(mData[i])
+        {
+            nb_object_voxels += 1.0;
+        }
+    }
+    return nb_object_voxels/total * 100.0;
+}
+
+/********************************************************************
+* this function computes the average trabeculae thickness
+*********************************************************************/
+void TubularObject::tb_Th()
+{
+    //TODO
+}
+
+/********************************************************************
+* this function computes the average trabeculae spacing
+*********************************************************************/
+void TubularObject::tb_Sp()
+{
+    //TODO
+}
+
+/********************************************************************
+* this function provides information about the shape of trabeculae.
+* it classifies rod-like and plate-like trabeculae.
+*********************************************************************/
+void TubularObject::tb_Shape()
+{
+    //TODO
+}
 
 /* Member Functions */
 /*******************************************************************************
-*   Skeletonize : 3D Thinning sequential Algorithm, whose the result is stored
-*                 in the skeleton char data structure.   
+*   Skeletonize : this function compute a skeleton of tubular object and store
+*   its result in the skeleton data structure. 
+*   from : A sequential 3D thinning algorithm and its medical applications (2001)  
 *******************************************************************************/
 void TubularObject::skeletonize()
 {
@@ -258,6 +323,7 @@ void TubularObject::build_Graph()
 
     delete [] visited;
 }
+
 
 /***********************************************  Node  definition  *********************************************************/
 
@@ -671,7 +737,7 @@ int findNode(const unsigned char *data, const Sizes& sizes, int np[26])
         if(data[i] != 0)
         {
             nb = collect_26_neighbours(data, i, sizes, np); 
-            if(nb != 2)
+            if(nb > 2)
             {
                 return i;
             }           
@@ -756,3 +822,5 @@ static void process_indices_from_graph(const Node* node, std::vector<int>& indic
         process_indices_from_graph((*edge_it)->to(), indices);
     }
 }
+
+ 
