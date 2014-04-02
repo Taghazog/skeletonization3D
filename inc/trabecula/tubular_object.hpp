@@ -64,6 +64,9 @@ public:
 	/* Getters */
     const unsigned char* data() const;
     const unsigned char* skeleton_data() const;
+    const std::list<Node*>& nodes() const;
+    const std::list<Edge*>& edges() const;
+
     const ANALYZE_DSR* dsr() const;
     const Sizes& sizes() const;
 

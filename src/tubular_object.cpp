@@ -164,6 +164,16 @@ const unsigned char* Tubular_object::skeleton_data() const
     return mSkeleton;
 }
 
+const std::list<Node*>& Tubular_object::nodes() const
+{
+    return mNodes;
+}
+
+const std::list<Edge*>& Tubular_object::edges() const
+{
+    return mEdges;
+}
+
 const ANALYZE_DSR* Tubular_object::dsr() const
 {
     return mDsr;
@@ -498,6 +508,7 @@ int nb = 0;
         }
     }
 
+    delete [] visited_tmp;
     delete [] voxel_ids;
     delete [] data_tmp;
 
@@ -555,6 +566,17 @@ int Tubular_object::dump_infos()
 ******************************************************************************************/
 int Tubular_object::save_skeleton()
 {
+    unsigned char* tmp = new unsigned char[ mSizes.size ];
+    memset(tmp, 0, mSizes.size * sizeof(unsigned char));
+
+    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    {
+        if(mSkeleton[i])
+        {
+            tmp[untransformed(i, mSizes)] = 1;
+        }
+    }
+
     std::string filename;
     filename = mFilename + "_skeleton.img";
     if(anaWriteImagedata(filename.c_str(), mDsr, (char*)mSkeleton))
@@ -567,6 +589,8 @@ int Tubular_object::save_skeleton()
     {
         return 1;
     }
+
+    delete [] tmp;
 }
 
 /***********************************************  Node  definition  *********************************************************/
