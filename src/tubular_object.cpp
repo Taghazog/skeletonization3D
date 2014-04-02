@@ -498,7 +498,6 @@ int nb = 0;
         }
     }
 
-    delete [] visited_tmp;
     delete [] voxel_ids;
     delete [] data_tmp;
 
