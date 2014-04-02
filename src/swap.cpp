@@ -2,10 +2,10 @@
   Copyright (c) 2001-2004 by Turku PET Centre
 
   swap.c
-  
+
   Byte swapping for little to big endian (and vice versa) conversion
   to be implemented in C programs.
-  
+
   Written by Vesa Oikonen
 
   Based on free codes in web.
@@ -30,7 +30,7 @@
 #include <string.h>
 #include <math.h>
 /*****************************************************************************/
-#include "swap.hpp"
+#include "trabecula/swap.hpp"
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -46,7 +46,7 @@ void swap(void *from, void *to, int size) {
   unsigned char c;
   unsigned short int s;
   unsigned long l;
-  
+
   switch(size) {
     case 1:
       *(char *)to=*(char *)from;
@@ -54,7 +54,7 @@ void swap(void *from, void *to, int size) {
     case 2:
       c=*(unsigned char *)from;
       *(unsigned char *)to = *((unsigned char *)from+1);
-      *((unsigned char *)to+1) = c; 
+      *((unsigned char *)to+1) = c;
       /*swab(from, to, size); // NOT ANSI */
       break;
     case 4:

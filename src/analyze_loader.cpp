@@ -4,7 +4,7 @@
 
     Library:     analyze.c
     Description: Procedures for reading and writing Analyze 7.5 images.
-                             Procedures in this file are not dependent on IMG struct. 
+                             Procedures in this file are not dependent on IMG struct.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -19,16 +19,18 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this library/program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
     Turku PET Centre, Turku, Finland, http://www.turkupetcentre.fi/
 
     -> Modifications by Jerome Bouzillard
-        anaReadHeader now reads correctly bytes.
         anaWriteImagedata : adding this procedure to write image data into a file
         (atm only write 3D images with char size values)
 
 ******************************************************************************/
+#include "trabecula/swap.hpp"
+#include "trabecula/analyze_loader.hpp"
+
 #include <cstdio>
 #include <cstring>
 #include <cmath>
@@ -36,106 +38,11 @@
 #include <ctime>
 #include <unistd.h>
 /*****************************************************************************/
-#include "swap.hpp"
+static int ANALYZE_TEST = 0;
+
 /*****************************************************************************/
-#include "analyze_loader.hpp"
-/*****************************************************************************/
-int ANALYZE_TEST = 0;
-/*****************************************************************************/
-int anaExists( const char *dbname) 
+int anaReadHeader(const char *filename, ANALYZE_DSR *h)
 {
-    char temp[FILENAME_MAX];
-
-    if(dbname==NULL || strlen(dbname)==0) return(0);
-    /* Header file? */
-    strcpy(temp, dbname); strcat(temp, ".hdr");
-    if(access(temp, 0) == -1) return(0);
-    /* Image data? */
-    strcpy(temp, dbname); strcat(temp, ".img");
-    if(access(temp, 0) == -1) return(0);
-    /* SIF? */
-    strcat(temp, ".sif"); if(access(temp, 0) != -1) return(2);
-    strcpy(temp, dbname); strcat(temp, ".sif");
-    if(access(temp, 0) != -1) return(2);
-    return(1);
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaExistsNew(
-    const char *filename,
-    char *hdrfile,
-    char *imgfile,
-    char *siffile
-) {
-    char *cptr, basefile[FILENAME_MAX], temp[FILENAME_MAX];
-    ANALYZE_DSR h;
-    int ret;
-
-    if(filename==NULL || strlen(filename)==0) return(0);
-    if(ANALYZE_TEST>1) printf("\nanaExistsNew(%s, *str, *str, *str)\n", filename);
-
-    /* Construct the base file name wo extensions */
-    strcpy(basefile, filename);
-    cptr=strrchr(basefile, '.');
-    if(cptr!=NULL) {
-        if(strncasecmp(cptr, ".HDR", 4)==0 || strncasecmp(cptr, ".IMG", 4)==0 )
-            *cptr=(char)0;
-    } 
-    cptr=strrchr(basefile, '.');
-    if(cptr!=NULL) {
-        if(strncasecmp(cptr, ".IMG", 4)==0 )
-            *cptr=(char)0;
-    }
-    if(ANALYZE_TEST>2) printf("\n  basefile := %s\n", basefile);
-
-    /* Header file exists? */
-    strcpy(temp, basefile); strcat(temp, ".hdr");
-    if(access(temp, 0) == -1) {
-        strcpy(temp, basefile); strcat(temp, ".img.hdr");
-        if(access(temp, 0) == -1) {
-            if(ANALYZE_TEST) printf("\n  hdr file not found or accessible.\n");
-            return(0);
-        }
-    }
-    /* Is this Analyze header file? */
-    if((ret=anaReadHeader(temp, &h))!=0) {
-        if(ANALYZE_TEST) {
-            printf("\n  %s was not identified as Analyze header file (%d).\n",
-                temp, ret);
-        }
-        return(0);
-    }
-    /* Preserve header filename */
-    if(hdrfile!=NULL) strcpy(hdrfile, temp);
-
-    /* Image file exists? */
-    strcpy(temp, basefile); strcat(temp, ".img");
-    if(access(temp, 0) == -1) {
-        if(ANALYZE_TEST) printf("\n  %s not found or accessible.\n", temp);
-        return(0);
-    }
-    /* Preserve image filename */
-    if(imgfile!=NULL) strcpy(imgfile, temp);
-
-    /* SIF exists? */
-    strcpy(temp, basefile); strcat(temp, ".sif");
-    if(access(temp, 0) == -1) {
-        strcpy(temp, basefile); strcat(temp, ".img.sif");
-        if(access(temp, 0) == -1) {
-            if(ANALYZE_TEST) printf("\n  SIF not found or accessible.\n");
-         if(siffile!=NULL) strcpy(siffile, "");
-            return(1); // but otherwise ok
-        }
-    }
-    /* Preserve SIF filename */
-    if(siffile!=NULL) strcpy(siffile, temp);
-    return(2);
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaReadHeader(const char *filename, ANALYZE_DSR *h) {
     unsigned char buf1[ANALYZE_HEADER_KEY_SIZE];
     unsigned char buf2[ANALYZE_HEADER_IMGDIM_SIZE];
     unsigned char buf3[ANALYZE_HEADER_HISTORY_SIZE];
@@ -146,17 +53,27 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h) {
     if(ANALYZE_TEST) printf("anaReadHeader(%s, *dsr)\n", filename);
 
     /* Check arguments */
-    if(strlen(filename)<1 || h==NULL) return(1);
+    if(strlen(filename)<1 || h==NULL)
+    {
+        printf("could not open file : %s, or the ANALYZE_DSR is not allocated", filename);
+        return 1;
+    }
     little = little_endian();
 
     /* Open file */
-    fp=fopen(filename, "rb"); if(fp==NULL) return(2);
-    
+    fp=fopen(filename, "rb");
+    if(fp==NULL)
+    {
+        printf("could not open file : %s", filename);
+        return 2;
+    }
+
+
     /* Get file size */
     nr=0; while((ret=fgetc(fp))!=EOF) nr++; rewind(fp);
-    if(nr<1) 
+    if(nr<1)
     {
-        fclose(fp); 
+        fclose(fp);
         return(3);
     }
 
@@ -165,29 +82,29 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h) {
    /* Read Analyze header image dimension */
    if(fread(buf2, ANALYZE_HEADER_IMGDIM_SIZE, 1, fp)<1) return(3);
    /* Read Analyze header image data history */
-   memset(buf3, 0, sizeof(ANALYZE_HEADER_HISTORY));
+   memset(buf3, 0, sizeof(data_history));
    ret=fread(buf3, ANALYZE_HEADER_HISTORY_SIZE, 1, fp);
    if(ANALYZE_TEST>1 && ret<1) printf(" complete data_history not found.\n");
-   
+
     /* Close file */
     fclose(fp);
 
-        
+
     /* Compare file size from header contents to the calculated value */
     /* to determine whether Analyze file is in little or big endian */
-    memcpy(&s1, buf1+0, 4); 
+    memcpy(&s1, buf1+0, 4);
     s2=s1;
     swawbip(&s2, 4);
     if( abs(s1 - nr) < abs(s2 - nr))
     {
-        same_order=1; 
+        same_order=1;
     }
 
-    else 
+    else
     {
         same_order=0;
-    } 
-    
+    }
+
     if(ANALYZE_TEST>1) printf("same byte order: %d (s1=%d s2=%d nr=%d)\n",
         same_order, s1, s2, nr);
     if(same_order) h->little=little;
@@ -263,7 +180,7 @@ int anaReadHeader(const char *filename, ANALYZE_DSR *h) {
 /*****************************************************************************/
 int anaWriteHeader(
     const char *filename,
-    ANALYZE_DSR *h
+    const ANALYZE_DSR *h
 ) {
     unsigned char buf1[ANALYZE_HEADER_KEY_SIZE];
     unsigned char buf2[ANALYZE_HEADER_IMGDIM_SIZE];
@@ -278,7 +195,7 @@ int anaWriteHeader(
     if(strlen(filename)<1 || h==NULL) return(1);
     little=little_endian();
     if(little==h->little) same_order=1; else same_order=0;
-    
+
     /* Copy header contents into buffers */
     /* Header key */
     memset(buf1, 0, ANALYZE_HEADER_KEY_SIZE);
@@ -361,28 +278,30 @@ int anaWriteHeader(
 /*****************************************************************************/
 
 /*****************************************************************************/
-int anaWriteImagedata(const char *filename, ANALYZE_DSR *h, const unsigned char *data)
+int anaWriteImagedata(const char *filename, const ANALYZE_DSR *h, const char *data)
 {
     /* Open Image file for write */
     FILE *fp;
 
-    fp = fopen(filename, "wb"); 
-    if(fp == NULL) 
+    fp = fopen(filename, "wb");
+    if(fp == NULL)
     {
         return 2;
     }
-    
+
     size_t size = h->dime.dim[1] * h->dime.dim[2] * h->dime.dim[3];
     if(fwrite(data, 1, size, fp)
              != size)
     {
         fclose(fp); return(3);
     }
+
+    fclose(fp);
 }
 /*****************************************************************************/
 
 /*****************************************************************************/
-int anaPrintHeader(ANALYZE_DSR *h, FILE *fp) {
+int anaPrintHeader(const ANALYZE_DSR *h, FILE *fp) {
     int i;
 
     if(fp==NULL || h==NULL) return(1);
@@ -449,11 +368,11 @@ int anaPrintHeader(ANALYZE_DSR *h, FILE *fp) {
 /*****************************************************************************/
 
 /*****************************************************************************/
-int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data) {
+int anaReadImagedata(const char *filename, const ANALYZE_DSR *h, int frame, char *data) {
     int dimNr, dimx, dimy, dimz=1, dimt=1, pxlNr=0;
     int i, n, little, start_pos, rawSize;
     char *mdata, *mptr;
-    char *fptr; 
+    char *fptr;
     float f;
     short int *sptr;
     int *iptr;
@@ -461,12 +380,21 @@ int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data
     FILE *fp;
 
     /* Open file */
-    fp=fopen(filename, "rb"); if(fp==NULL) return(2);
+    fp=fopen(filename, "rb");
+    if(fp==NULL)
+    {
+        printf("could not open Image File: %s", filename);
+        return 2;
+    }
 
     if(ANALYZE_TEST) printf("anaReadImagedata(fp, h, %d, data)\n", frame);
 
     /* Check the arguments */
-    if(frame<=0 || fp==NULL || h==NULL || data==NULL) return(1);
+    if(frame<=0 || h==NULL || data==NULL)
+    {
+        printf("frame must be positive integer, Analyze header filled and the data allocated");
+        return 1;
+    }
 
     /* Get the image dimensions from header */
     dimNr=h->dime.dim[0]; if(dimNr<2) return(2);
@@ -509,7 +437,7 @@ int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data
             case 16: swabip(mptr, rawSize); break;
             case 32: swawbip(mptr, rawSize); break;
             case 64: swawbip(mptr, rawSize); break;
-            default: 
+            default:
                 if(ANALYZE_TEST>5)
                     printf("unsupported anahdr.dime.bitpix := %d\n", h->dime.bitpix);
                 free(mdata); return(5);
@@ -523,7 +451,7 @@ int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data
     /* Copy data to float pixel values */
     mptr=mdata; fptr=data;
     switch(h->dime.datatype) {
-        case ANALYZE_DT_UNSIGNED_CHAR:  
+        case ANALYZE_DT_UNSIGNED_CHAR:
 
             if(h->dime.bitpix!=8) {
                 if(ANALYZE_TEST>5)
@@ -605,119 +533,9 @@ int anaReadImagedata(const char *filename, ANALYZE_DSR *h, int frame, char *data
             free(mdata); return(5);
     }
 
+    fclose(fp);
     free(mdata);
     if(ANALYZE_TEST>1) printf("anaReadImagedata() succeeded\n");
     return(0);
 }
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaFlipping() {
-    int ret;
-    char *cptr;
-
-    /* Is there an environment variable name for flipping? */
-    cptr=getenv("ANALYZE_FLIP");
-    if(cptr==NULL) cptr=getenv("ANALYZE_FLIPPING");
-    if(cptr==NULL) cptr=getenv("analyze_flip");
-    if(cptr==NULL) cptr=getenv("analyze_flipping");
-    if(cptr==NULL) {
-        if(ANALYZE_TEST>1) printf("ANALYZE_FLIP = not defined\n");
-        ret=ANALYZE_FLIP_DEFAULT; /* if not, then use default value */
-    } else {
-        if(ANALYZE_TEST>1) printf("ANALYZE_FLIP = '%s'\n", cptr);
-        if(*cptr=='y' || *cptr=='Y' || *cptr=='1') ret=1;
-        else if(*cptr=='n' || *cptr=='N' || *cptr=='0') ret=0;
-        else ret=ANALYZE_FLIP_DEFAULT;
-    }
-    if(ANALYZE_TEST) printf("anaFlipping()=%d\n", ret);
-    return(ret);
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaRemove(
-    const char *dbname
-) {
-    char datfile[FILENAME_MAX], hdrfile[FILENAME_MAX], siffile[FILENAME_MAX];
-
-    if(ANALYZE_TEST) printf("anaRemove(%s)\n", dbname);
-    if(anaDatabaseExists(dbname, hdrfile, datfile, siffile)==0) return 0;
-    if(ANALYZE_TEST>2) printf("  removing %s and %s\n", hdrfile, datfile);
-    if(remove(hdrfile)!=0) return 1;
-    if(remove(datfile)!=0) return 2;
-    return 0;
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-void anaRemoveFNameExtension(char *fname) {
-    char *cptr;
-    cptr=strrchr(fname, '.'); if(cptr==NULL) return;
-    if(strcasecmp(cptr, ".")==0 || strcasecmp(cptr, ".img")==0 ||
-         strcasecmp(cptr, ".hdr")==0 || strcasecmp(cptr, ".sif")==0)
-    *cptr=(char)0;
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaDatabaseExists(
-    const char *dbname,
-    char *hdrfile,
-    char *imgfile,
-    char *siffile
-) {
-    char temp[FILENAME_MAX], database[FILENAME_MAX];
-    int checked=0;
-
-    if(ANALYZE_TEST)
-        printf("\nanaDatabaseExists(%s, *hdrfile, *imgfile, *siffile)\n", dbname);
-
-    /* Check the input */
-    if(hdrfile!=NULL) strcpy(hdrfile, "");
-    if(imgfile!=NULL) strcpy(imgfile, "");
-    if(siffile!=NULL) strcpy(siffile, "");
-    if(dbname==NULL || strlen(dbname)==0) return(0);
-
-    strcpy(database, dbname);
-    while(1) {
-        /* Header file? */
-        strcpy(temp, database); strcat(temp, ".hdr");
-        if(access(temp, 0) != -1) {
-            /* Also image file? */
-            strcpy(temp, database); strcat(temp, ".img");
-            if(access(temp, 0) != -1) {
-                if(hdrfile!=NULL) sprintf(hdrfile, "%s.hdr", database);
-                if(imgfile!=NULL) sprintf(imgfile, "%s.img", database);
-                /* Even SIF? */
-                if(anaMakeSIFName(database, temp)==0) { /* yes! */
-                    if(siffile!=NULL) strcpy(siffile, temp); return(2);
-                }
-                /* Image and header files did exist anyway */
-                return(1);
-            }
-        }
-        if(checked==1) break;
-        /* Try to remove extension */
-        anaRemoveFNameExtension(database);
-        checked=1;
-    } /* try again */
-    return(0);
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int anaMakeSIFName(
-    const char *dbname,
-    char *siffile
-) {
-    if(dbname==NULL || siffile==NULL) return(1);
-    sprintf(siffile, "%s.sif", dbname); if(access(siffile, 0) != -1) return(0);
-    sprintf(siffile, "%s.SIF", dbname); if(access(siffile, 0) != -1) return(0);
-    sprintf(siffile, "%s.img.sif", dbname); if(access(siffile, 0) != -1) return(0);
-    sprintf(siffile, "%s.IMG.SIF", dbname); if(access(siffile, 0) != -1) return(0);
-    sprintf(siffile, "%s.sif", dbname); return(2);
-}
-/*****************************************************************************/
-
 /*****************************************************************************/
