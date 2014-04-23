@@ -1,16 +1,18 @@
-/**********************************************************************/
-/*  Copyright (c) 2014, Jerome Bouzillard
-/*  All rights reserved.
-/*
-/*  Redistribution and use in source and binary forms, with or without
-/*  modification, are permitted as soon as it retains the above copyright
-/*  notice.
+/**********************************************************************
+*  Copyright (c) 2014, Jerome Bouzillard
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted as soon as it retains the above copyright
+*  notice.
 *********************************************************************/
 
 #ifndef TUBULAR_OBJECT_HPP
 #define TUBULAR_OBJECT_HPP
 
 #include "trabecula/analyze_loader.hpp"
+
+#include "build_info.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -29,16 +31,16 @@ class Edge;
 /*	when images are zero-bordered                           */
 struct Sizes
 {
-	unsigned int size_x;
-	unsigned int size_y;
-	unsigned int size_z;
-	unsigned int size_x_enlarged;
-	unsigned int size_y_enlarged;
-	unsigned int size_z_enlarged;
-	unsigned int size;
-	unsigned int size_enlarged;
-	unsigned int xOy_size;
-	unsigned int xOy_enlarged_size;
+	UINT size_x;
+	UINT size_y;
+	UINT size_z;
+	UINT size_x_enlarged;
+	UINT size_y_enlarged;
+	UINT size_z_enlarged;
+	UINT size;
+	UINT size_enlarged;
+	UINT xOy_size;
+	UINT xOy_enlarged_size;
 };
 
 /********************************************************/
@@ -75,7 +77,7 @@ public:
 	int load_from_file(const std::string& filename);
 	float bv_tv() const;
 	void average_trabecular_length(float values[4]);
-	int number_of_trabeculae();
+	UINT number_of_trabeculae();
 	void nodes_connectivity(std::vector<int>& con);
     void tb_th();
     void tb_sp();
@@ -117,12 +119,12 @@ public:
 
 public:
 	/* Setters */
-	void set_connectivity(int nb_edges);
+	void set_connectivity(UINT nb_edges);
 
 
 public:
 	/* Getters */
-	int connectivity() const;
+	UINT connectivity() const;
     const std::list<Edge*>& edges() const;
     const std::list<int>& positions() const;
 
@@ -130,14 +132,14 @@ public:
 public:
 	/* Member Functions */
     void add_edge(Edge* edge);
-    void add_voxel(int indice);
-    void remove_voxel(int indice);
+    void add_voxel(UINT indice);
+    void remove_voxel(UINT indice);
 
 private:
 	/* Member Variables */
 	std::list<Edge*> mEdges;
 	std::list<int> mPositions;
-	int mConnectivity;
+	UINT mConnectivity;
 
 };
 
@@ -169,7 +171,7 @@ public:
 
 public:
 	/* Member Functions */
-    void add_voxel(int ind, int adjacency, bool front);
+    void add_voxel(UINT ind, UINT adjacency, bool front);
 
 private:
 	/* Member Variables */

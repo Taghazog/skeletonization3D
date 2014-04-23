@@ -297,6 +297,7 @@ int anaWriteImagedata(const char *filename, const ANALYZE_DSR *h, const char *da
     }
 
     fclose(fp);
+	return 0;
 }
 /*****************************************************************************/
 

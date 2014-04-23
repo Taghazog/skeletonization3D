@@ -1,19 +1,19 @@
-/**********************************************************************/
-/*  Copyright (c) 2014, Jerome Bouzillard
-/*  All rights reserved.
-/*
-/*  Redistribution and use in source and binary forms, with or without
-/*  modification, are permitted as soon as it retains the above copyright
-/*  notice.
+/**********************************************************************
+*  Copyright (c) 2014, Jerome Bouzillard
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted as soon as it retains the above copyright
+*  notice.
 *********************************************************************/
-/**********************************************************************/
-/*
-/* This file provides implementation of skeletonization of a
-/* Tubular Object, a Graph (Nodes, Edges) of the skeleton, and
-/*  information related mostly to cancellous bone.
-/*  @implements Tubular_object, Node, Edge.
-/*
-/**********************************************************************/
+/**********************************************************************
+*
+* This file provides implementation of skeletonization of a
+* Tubular Object, a Graph (Nodes, Edges) of the skeleton, and
+*  information related mostly to cancellous bone.
+*  @implements Tubular_object, Node, Edge.
+*
+**********************************************************************/
 
 #include "trabecula/analyze_loader.hpp"
 #include "trabecula/tubular_object.hpp"
@@ -31,7 +31,7 @@ namespace Trabecula
 
 /***********************************************  UTILITIES  declaration  ***************************************************/
 
-/* This constant provides all the 26-adjacent neighbours of each of the 26 neighbours of a point */
+/* This constant provides all the 26-adjacent neighbours of each of the 26 neighbours of a poUINT */
 static const unsigned short S26[171] = {
     1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 18, 19, 20, 21    //    U
   , 2, 3, 5, 6, 7, 8, 10, 11, 14, 15, 16, 18, 19, 22, 23      //     N
@@ -63,7 +63,7 @@ static const unsigned short S26[171] = {
                                                               // E D S
                                         };
 
-/* This constant provides the 6-adjacent neighbours of the 18 neighbours of a point */
+/* This constant provides the 6-adjacent neighbours of the 18 neighbours of a poUINT */
 static const unsigned short S6_18[48] = {
    6, 7, 8, 9        //    U
  , 6, 10, 11, 14     //     N
@@ -102,32 +102,32 @@ static const float EDGE_THRESHOLD = 2.1;
 
 // functions mostly related to the skeletonization process, but not only.
 static int skeletonize_data(const unsigned char* data, unsigned char* skeleton, const Sizes& sizes);
-static int subiter(unsigned char* data, std::list<int>& black_points_set, int direction, const Sizes& sizes);
-static bool is_border_point(const unsigned char* data, int direction, int p);
-static void collect_26_neighbours( int p, const Sizes& sizes, int np[26] );
-static bool is_simple( const int np[26]);
-static int connected26(const int np[26], int i, bool *visited);
-static bool is_cond_2_satisfied(const int np[26]);
-static void connected6_18(const int np[26], int i, bool *visited, std::bitset<6>& adjacent);
-static bool is_cond_4_satisfied(const int np[26]);
+static UINT subiter(unsigned char* data, std::list<int>& black_points_set, UINT direction, const Sizes& sizes);
+static bool is_border_point(const unsigned char* data, UINT direction, UINT p);
+static void collect_26_neighbours( UINT p, const Sizes& sizes, UINT np[26] );
+static bool is_simple( const UINT np[26]);
+static UINT connected26(const UINT np[26], UINT i, bool *visited);
+static bool is_cond_2_satisfied(const UINT np[26]);
+static void connected6_18(const UINT np[26], UINT i, bool *visited, std::bitset<6>& adjacent);
+static bool is_cond_4_satisfied(const UINT np[26]);
 
 //functions to border data with zeroes, and get the indice from the original.
 static void bordering(const unsigned char* from, unsigned char* with_borders, const Sizes& sizes);
-static int untransformed(int indice, const Sizes& sizes);
+static UINT untransformed(UINT indice, const Sizes& sizes);
 
 //functions to build the graph.
-static int find_edge(const unsigned char *thinned, const Sizes& sizes, int np[26]);
-static void identify_voxels(int ind, const unsigned char *data, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids);
+static UINT find_edge(const unsigned char *thinned, const Sizes& sizes, UINT np[26]);
+static void identify_voxels(UINT ind, const unsigned char *data, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids);
 static void remove_small_branches(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids);
 static void refine_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids);
-static bool is_node_refinable(int ind, const Edge* edge, const Sizes& sizes, std::pair<Node*, Edge*>*voxel_ids);
+static bool is_node_refinable(UINT ind, const Edge* edge, const Sizes& sizes, std::pair<Node*, Edge*>*voxel_ids);
 static bool is_branch(const Edge* edge, Node*& node_back, Node*& node_front, const Sizes& sizes, const std::pair<Node*, Edge*>* voxel_ids);
 static void fusion_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids);
 
 /***********************************************  TubularObject  definition  ************************************************/
 
 /* Constructors/Destructors */
-Tubular_object::Tubular_object(): mData(0), mSkeleton(0), mDsr(0)
+Tubular_object::Tubular_object(): mDsr(0), mData(0), mSkeleton(0)
 {
 
 }
@@ -228,6 +228,7 @@ int Tubular_object::load_from_file(const std::string& filename)
     }
     bordering(data_tmp, mData, mSizes);
     delete [] data_tmp;
+	return 0;
 }
 
 /********************************************************************
@@ -241,7 +242,7 @@ float Tubular_object::bv_tv() const
     float total = 1.0/6.0 * pi * mSizes.size; // 4/3 * Pi * R^3
     float nb_object_voxels = 0.0;
 
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         if(mData[i])
         {
@@ -259,8 +260,8 @@ void Tubular_object::average_trabecular_length(float values[4])
 {
     values[0] = 0.0;
     float min = (float) std::numeric_limits<int>::max();
-    float max = 0.0;
-    float variance;
+    float max = 0.0f;
+    float variance = 0.0f;
     float tmp;
 
     for (std::list<Edge*>::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
@@ -299,7 +300,7 @@ void Tubular_object::average_trabecular_length(float values[4])
 /*******************************************************************************
 * this function provides the number of trabeculae in the object
 ********************************************************************************/
-int Tubular_object::number_of_trabeculae()
+UINT Tubular_object::number_of_trabeculae()
 {
     return mEdges.size();
 }
@@ -309,14 +310,14 @@ int Tubular_object::number_of_trabeculae()
 ********************************************************************************/
 void Tubular_object::nodes_connectivity(std::vector<int>& con)
 {
-    int connectivity[26] = {};
+    UINT connectivity[26] = {};
 
     for (std::list<Node*>::const_iterator it = mNodes.begin(); it != mNodes.end(); ++it)
     {
         ++connectivity[(*it)->connectivity()];
     }
 
-    for (int i = 0; i < 26; ++i)
+    for (UINT i = 0; i < 26; ++i)
     {
         if(connectivity[i] != 0)
         {
@@ -366,7 +367,7 @@ int Tubular_object::build_graph()
 
     /*  Create a copy of data with binary values and zero borders */
     unsigned char *data_tmp = new unsigned char[mSizes.size_enlarged];
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         data_tmp[i] = mSkeleton[i];
     }
@@ -376,8 +377,8 @@ int Tubular_object::build_graph()
     memset(voxel_ids, 0, mSizes.size_enlarged * sizeof(std::pair<Node*, Edge*>));
 
     /*  Find the indice of a starting edge */
-    int np[26];
-    int ind = find_edge(data_tmp, mSizes, np);
+    UINT np[26];
+    UINT ind = find_edge(data_tmp, mSizes, np);
 
     if(ind == mSizes.size_enlarged)
     {
@@ -397,7 +398,7 @@ int Tubular_object::build_graph()
         (noise from skeletonization, or segmentation)                       */
     remove_small_branches(mSizes, voxel_ids);
 
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         if(voxel_ids[i].second || voxel_ids[i].first )
         {
@@ -408,15 +409,14 @@ int Tubular_object::build_graph()
             mSkeleton[i] = 0;
         }
     }
-int nb = 0;
 
     // reskeletonize after deleting noisy branches to prepare the second pass.
     skeletonize_data(mSkeleton, mSkeleton, mSizes);
 
     // Free the memory allocated by nodes and edges before Second pass
-    Node* node_tmp;
-    Edge* edge_tmp;
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    Node* node_tmp = 0;
+    Edge* edge_tmp = 0;
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         if(voxel_ids[i].first)
         {
@@ -444,6 +444,12 @@ int nb = 0;
     /** SECOND PASS: Fusion the nodes that are connected each other by a too small edge **/
     ind = find_edge(data_tmp, mSizes, np);
 
+    if(ind == mSizes.size_enlarged)
+    {
+    	std::cerr << "couldnt build graph, skeleton is empty or no nodes in it!" << std::endl;
+    	return 2;
+    }
+
     /* Compute a depth-first search to create the nodes and edges */
     identify_voxels(ind, data_tmp, mSizes, voxel_ids);
 
@@ -459,7 +465,7 @@ int nb = 0;
 
     // for each edges, stores the connected nodes, stores the edge to the connected nodes
     // and fill the list of edges and nodes not yet visited to the tubular object.
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         if(voxel_ids[i].second)
         {
@@ -470,7 +476,7 @@ int nb = 0;
                 mEdges.push_back(edge_tmp);
 
                 collect_26_neighbours(edge_tmp->data().front(), mSizes, np);
-                for (int j = 0; j < 26; ++j)
+                for (UINT j = 0; j < 26; ++j)
                 {
                     if (voxel_ids[np[j]].first)
                     {
@@ -488,7 +494,7 @@ int nb = 0;
                 }
 
                 collect_26_neighbours(edge_tmp->data().back(), mSizes, np);
-                for (int j = 0; j < 26; ++j)
+                for (UINT j = 0; j < 26; ++j)
                 {
                     if (voxel_ids[np[j]].first && node_tmp != voxel_ids[np[j]].first)
                     {
@@ -549,7 +555,7 @@ int Tubular_object::dump_infos()
 
     myfile << "Junction Histogram: (Junction Connectivity - Number of Junctions)" << std::endl;
 
-    for (int i = 0; i < connectivities.size(); i += 2)
+    for (UINT i = 0; i < connectivities.size(); i += 2)
     {
         myfile << connectivities[i] << " - " << connectivities[i+1] << std::endl;
     }
@@ -559,6 +565,8 @@ int Tubular_object::dump_infos()
     //tb_shape();
 
     myfile.close();
+	
+	return 0;
 }
 
 /******************************************************************************************
@@ -569,7 +577,7 @@ int Tubular_object::save_skeleton()
     unsigned char* tmp = new unsigned char[ mSizes.size ];
     memset(tmp, 0, mSizes.size * sizeof(unsigned char));
 
-    for (int i = 0; i < mSizes.size_enlarged; ++i)
+    for (UINT i = 0; i < mSizes.size_enlarged; ++i)
     {
         if(mSkeleton[i])
         {
@@ -591,6 +599,7 @@ int Tubular_object::save_skeleton()
     }
 
     delete [] tmp;
+	return 0;
 }
 
 /***********************************************  Node  definition  *********************************************************/
@@ -605,13 +614,13 @@ Node::~Node()
 }
 
 /* Setters */
-void Node::set_connectivity(int nb_edges)
+void Node::set_connectivity(UINT nb_edges)
 {
     mConnectivity = nb_edges;
 }
 
 /* Getters */
-int Node::connectivity() const
+UINT Node::connectivity() const
 {
     return mConnectivity;
 }
@@ -633,12 +642,12 @@ void Node::add_edge(Edge* edge)
     mEdges.push_back(edge);
 }
 
-void Node::add_voxel(int indice)
+void Node::add_voxel(UINT indice)
 {
     mPositions.push_back(indice);
 }
 
-void Node::remove_voxel(int indice)
+void Node::remove_voxel(UINT indice)
 {
     mPositions.remove(indice);
 }
@@ -694,7 +703,7 @@ const std::deque<int>& Edge::data() const
 *   This function add a voxel to an existing edge, and update its length
 *   depending on adjacency. The function assumes the image 3D to be isotropic.
 **************************************************************************/
-void Edge::add_voxel(int ind, int adjacency, bool back)
+void Edge::add_voxel(UINT ind, UINT adjacency, bool back)
 {
     if(adjacency < 6)
     {
@@ -736,7 +745,7 @@ static int skeletonize_data(const unsigned char* data, unsigned char* skeleton, 
     /*  copy the Black points set indices into an array */
     /*  and create a copy of data with binary values and zero borders */
     unsigned char *data_tmp = new unsigned char[sizes.size_enlarged];
-    for (int i = 0; i < sizes.size_enlarged; ++i)
+    for (UINT i = 0; i < sizes.size_enlarged; ++i)
     {
         data_tmp[i] = data[i];
     }
@@ -744,7 +753,7 @@ static int skeletonize_data(const unsigned char* data, unsigned char* skeleton, 
     memset(skeleton, 0, sizes.size_enlarged * sizeof(unsigned char));
     std::list<int> black_points_set;
 
-    for(int i = 0; i < sizes.size_enlarged; ++i)
+    for(UINT i = 0; i < sizes.size_enlarged; ++i)
     {
         if(data_tmp[i])
         {
@@ -752,7 +761,7 @@ static int skeletonize_data(const unsigned char* data, unsigned char* skeleton, 
         }
     }
 
-    int modified;
+    UINT modified;
 
     /* Compute the 6 subiterations until no points are deleted */
     do
@@ -783,11 +792,11 @@ static int skeletonize_data(const unsigned char* data, unsigned char* skeleton, 
 *   @params : The image data, the black points set,
 *             the direction, image dimensions sizes
 *******************************************************************************/
-static int subiter(unsigned char* data, std::list<int>& black_points_set, int direction, const Sizes& sizes)
+static UINT subiter(unsigned char* data, std::list<int>& black_points_set, UINT direction, const Sizes& sizes)
 {
-    int modified = 0;
-    int np[26];
-    int nb = 0;
+    UINT modified = 0;
+    UINT np[26];
+    UINT nb = 0;
 
     /* list of simple and non end points, pointers from black_points_set */
     std::list<std::list<int>::iterator> list;
@@ -799,7 +808,7 @@ static int subiter(unsigned char* data, std::list<int>& black_points_set, int di
         {
             collect_26_neighbours(*p, sizes, np);
             nb = 0;
-            for (int i = 0; i < 26; ++i)
+            for (UINT i = 0; i < 26; ++i)
             {
                 if(data[np[i]] != 0)
                 {
@@ -822,9 +831,9 @@ static int subiter(unsigned char* data, std::list<int>& black_points_set, int di
         }
     }
 
-    int value = -1;
+    UINT value = -1;
 
-    // remove each point of the list if they remain simple and non endpoint.
+    // remove each poUINT of the list if they remain simple and non endpoint.
     while( value != modified )
     {
         value = modified;
@@ -832,7 +841,7 @@ static int subiter(unsigned char* data, std::list<int>& black_points_set, int di
         {
             collect_26_neighbours(**p, sizes, np);
             nb = 0;
-            for (int i = 0; i < 26; ++i)
+            for (UINT i = 0; i < 26; ++i)
             {
                 if(data[np[i]] != 0)
                 {
@@ -864,11 +873,11 @@ static int subiter(unsigned char* data, std::list<int>& black_points_set, int di
 }
 
 /*******************************************************************************
-*   is_borderPoint : Return true if the point p is a border Point from one
+*   is_borderPoUINT : Return true if the poUINT p is a border PoUINT from one
 *                    direction.
-*   @params : The image data, the direction, the point p
+*   @params : The image data, the direction, the poUINT p
 *******************************************************************************/
-static bool is_border_point(const unsigned char* data, int direction, int p)
+static bool is_border_point(const unsigned char* data, UINT direction, UINT p)
 {
     return !data[p + direction];
 }
@@ -876,9 +885,9 @@ static bool is_border_point(const unsigned char* data, int direction, int p)
 
 /*******************************************************************************
 *   collect_26_neighbours : save the neighbour indices in the data np.
-*   @params : the point p, image dimensions sizes, 26 neighbours
+*   @params : the poUINT p, image dimensions sizes, 26 neighbours
 *******************************************************************************/
-static void collect_26_neighbours( int p, const Sizes& sizes, int np[26] )
+static void collect_26_neighbours( UINT p, const Sizes& sizes, UINT np[26] )
 {
     /*  west : p - 1
         east : p + 1
@@ -887,10 +896,8 @@ static void collect_26_neighbours( int p, const Sizes& sizes, int np[26] )
         up : p - width
         down : p + width
     */
-    int vertical = sizes.size_x_enlarged;
-    int depth = sizes.xOy_enlarged_size;
-
-    int nb = 0;
+    UINT vertical = sizes.size_x_enlarged;
+    UINT depth = sizes.xOy_enlarged_size;
 
     /* 6-adjacent */
     np[0] = p - vertical;                //    U
@@ -926,7 +933,7 @@ static void collect_26_neighbours( int p, const Sizes& sizes, int np[26] )
 }
 
 /*******************************************************************************
-*   is_simple : return true if the point is simple, i.e does not alter the
+*   is_simple : return true if the poUINT is simple, i.e does not alter the
 *               topology of the picture :
 *   1. the set N26(p)∩(B\{p}) is not empty (i.e., p is not an isolated point);
 *   2. the set N26(p)∩(B\{p}) is 26–connected (in itself );
@@ -934,7 +941,7 @@ static void collect_26_neighbours( int p, const Sizes& sizes, int np[26] )
 *   4. the set (ZZ^3\B)∩ N6(p) is 6–connected in the set (ZZ^3\B)∩ N18(p)
 *   @params : 26 neighbour values of p
 *******************************************************************************/
-static bool is_simple(const int np[26])
+static bool is_simple(const UINT np[26])
 {
     if( is_cond_2_satisfied(np) )
     {
@@ -948,24 +955,24 @@ static bool is_simple(const int np[26])
 
 /********************************************************************************
 * This condition check if the black points in the neighbourhood
-* of point p are 26-adjacent, to prevent from deleting p which would
+* of poUINT p are 26-adjacent, to prevent from deleting p which would
 * change topology of B set. (the key of the erosion thinning process).
-* p must be a non end-point to enter this function
+* p must be a non end-poUINT to enter this function
 *********************************************************************************/
-static bool is_cond_2_satisfied(const int np[26])
+static bool is_cond_2_satisfied(const UINT np[26])
 {
     bool visited[26] = {false};
-    int i = 0;
+    UINT i = 0;
     while(!np[i])
     {
         visited[i] = true;
         ++i;
     }
 
-    int res = connected26(np, i, visited);
+    UINT res = connected26(np, i, visited);
 
-    int nb = 0;
-    for(int i = 0; i < 26; ++i)
+    UINT nb = 0;
+    for(UINT i = 0; i < 26; ++i)
     {
         if(np[i] != 0)
         {
@@ -984,12 +991,12 @@ static bool is_cond_2_satisfied(const int np[26])
 /********************************************************************************
 * This is a recursive fonction adding neighbors 26-adjacent in itself
 *********************************************************************************/
-static int connected26(const int np[26], int i, bool *visited)
+static UINT connected26(const UINT np[26], UINT i, bool *visited)
 {
     unsigned short nb = 1;
     visited[i] = true;
     unsigned short ind;
-    for(int j = INDICESS26[i]; j < INDICESS26[i+1]; ++j)
+    for(UINT j = INDICESS26[i]; j < INDICESS26[i+1]; ++j)
     {
         ind = S26[j];
         if(!visited[ind] && np[ind])
@@ -1003,14 +1010,14 @@ static int connected26(const int np[26], int i, bool *visited)
 
 /********************************************************************************
 * This condition check if the white points in the 6 neighbourhood
-* of point p are 6-adjacent in 18-adjacency to keep the topology
+* of poUINT p are 6-adjacent in 18-adjacency to keep the topology
 * of B set. (the key of the erosion thinning process)
 *********************************************************************************/
-static bool is_cond_4_satisfied(const int np[26])
+static bool is_cond_4_satisfied(const UINT np[26])
 {
     bool visited[18] = {false};
     std::bitset<6> adjacent(0b000000);
-    int i = 0;
+    UINT i = 0;
     while(np[i])
     {
         visited[i] = true;
@@ -1031,11 +1038,11 @@ static bool is_cond_4_satisfied(const int np[26])
 /********************************************************************************
 * This is a recursive fonction adding 6-adjacent neighbors 6-adjacent in 18 set
 ********************************************************************************/
-static void connected6_18(const int np[26], int i, bool *visited, std::bitset<6>& adjacent)
+static void connected6_18(const UINT np[26], UINT i, bool *visited, std::bitset<6>& adjacent)
 {
     visited[i] = true;
     unsigned short ind;
-    for(int j = INDICESS6_18[i]; j < INDICESS6_18[i+1]; ++j)
+    for(UINT j = INDICESS6_18[i]; j < INDICESS6_18[i+1]; ++j)
     {
         ind = S6_18[j];
         if(!visited[ind] && !np[ind])
@@ -1057,17 +1064,17 @@ static void bordering(const unsigned char* from, unsigned char* with_borders, co
     memset(with_borders, 0, sizes.size_enlarged * sizeof(unsigned char));
 
     // xOy read order
-    int depth, height, depth_enlarged, height_enlarged, ind;
+    UINT depth, height, depth_enlarged, height_enlarged, ind;
 
-    for(int i = 0; i < sizes.size_z; ++i)
+    for(UINT i = 0; i < sizes.size_z; ++i)
     {
         depth = i * sizes.xOy_size;
         depth_enlarged = (i+1) * sizes.xOy_enlarged_size;
-        for(int j = 0; j < sizes.size_y; ++j)
+        for(UINT j = 0; j < sizes.size_y; ++j)
         {
             height = j * sizes.size_x;
             height_enlarged = (j+1) * sizes.size_x_enlarged;
-            for(int k = 0; k < sizes.size_x; ++k)
+            for(UINT k = 0; k < sizes.size_x; ++k)
             {
                 if(from[depth + height + k] != 0 )
                 {
@@ -1083,9 +1090,9 @@ static void bordering(const unsigned char* from, unsigned char* with_borders, co
 *   This function transform an indice from an array with zero borders
 *   to the original array without the zero borders
 **************************************************************************/
-int untransformed(int indice, const Sizes& sizes)
+UINT untransformed(UINT indice, const Sizes& sizes)
 {
-    int depth, height, ind;
+    UINT depth, height, ind;
 
     depth = indice / sizes.xOy_enlarged_size;
     depth = (depth - 1) * sizes.xOy_size;
@@ -1102,17 +1109,17 @@ int untransformed(int indice, const Sizes& sizes)
 *   This function finds a starting edge in the skeleton that is not yet
 visited to build the graph.
 **************************************************************************/
-int find_edge(const unsigned char *data, const Sizes& sizes, int np[26])
+UINT find_edge(const unsigned char *data, const Sizes& sizes, UINT np[26])
 {
-    int nb;
-    int i = 0;
+    UINT nb;
+    UINT i = 0;
     while (i < sizes.size_enlarged )
     {
         if(data[i] != 0)
         {
             collect_26_neighbours(i, sizes, np);
             nb = 0;
-            for (int j = 0; j < 26; ++j)
+            for (UINT j = 0; j < 26; ++j)
             {
                 if(data[np[j]] != 0)
                 {
@@ -1134,21 +1141,20 @@ int find_edge(const unsigned char *data, const Sizes& sizes, int np[26])
 *   This function compute a recursive depth-first search
 *   algorithm to identify and create edges and nodes on the skeleton.
 **************************************************************************/
-static void identify_voxels(int ind, const unsigned char *data, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
+static void identify_voxels(UINT ind, const unsigned char *data, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
 {
     // build the edge until the destination node is encountered.
     Edge* edge = new Edge();
-    int np[26];
-    int indice;
+    UINT np[26];
     bool on_edge = true;
-    int connectivity;
-    int adjacency = 6;
+    UINT connectivity;
+    UINT adjacency = 6;
 
     do
     {
         collect_26_neighbours(ind, sizes, np);
         connectivity = 0;
-        for (int i = 0; i < 26; ++i)
+        for (UINT i = 0; i < 26; ++i)
         {
             if(data[np[i]] != 0)
             {
@@ -1165,7 +1171,7 @@ static void identify_voxels(int ind, const unsigned char *data, const Sizes& siz
             voxel_ids[ind].second = edge;
             edge->add_voxel(ind, adjacency, true);
 
-            int i = 0;
+            UINT i = 0;
             while (i < 26)
             {
                 if(data[np[i]] && !voxel_ids[np[i]].second && !voxel_ids[np[i]].first)
@@ -1189,8 +1195,8 @@ static void identify_voxels(int ind, const unsigned char *data, const Sizes& siz
     {
         Node* node = new Node();
 
-        int np[26];
-        int connectivity;
+        UINT np[26];
+        UINT connectivity;
         std::list<int> edges;
         std::deque<int> queue;
 
@@ -1205,7 +1211,7 @@ static void identify_voxels(int ind, const unsigned char *data, const Sizes& siz
 
             collect_26_neighbours(ind, sizes, np);
             connectivity = 0;
-            for (int i = 0; i < 26; ++i)
+            for (UINT i = 0; i < 26; ++i)
             {
                 if(data[np[i]] != 0)
                 {
@@ -1221,7 +1227,7 @@ static void identify_voxels(int ind, const unsigned char *data, const Sizes& siz
             }
             else
             {
-                for (int i = 0; i < 26; ++i)
+                for (UINT i = 0; i < 26; ++i)
                 {
                     if(data[np[i]] && !voxel_ids[np[i]].first)
                     {
@@ -1252,15 +1258,14 @@ static void identify_voxels(int ind, const unsigned char *data, const Sizes& siz
 * 1: check that node voxel deletion doesn't disconnect its node voxel neighbours
 * 2: check if the edges connected to the node voxel are still connected to the node.
 **************************************************************************/
-static bool is_node_refinable(int ind, const Edge* edge, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
+static bool is_node_refinable(UINT ind, const Edge* edge, const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
 {
-    int np[26];
+    UINT np[26];
     std::list<Edge*> edges;
     std::list<int> node_voxels;
-int nttt = 0;
     // check the neighbours of the node voxels
     collect_26_neighbours(ind, sizes, np);
-    for (int i = 0; i < 26; ++i)
+    for (UINT i = 0; i < 26; ++i)
     {
         // temporarily stores the edges connected to that node voxel.
         if (voxel_ids[np[i]].second && voxel_ids[np[i]].second != edge)
@@ -1290,7 +1295,7 @@ int nttt = 0;
             for (std::list<int>::iterator it = node_voxels.begin(); it != node_voxels.end() && !edges.empty(); ++it)
             {
                 collect_26_neighbours(*it, sizes, np);
-                for (int i = 0; i < 26 && !edges.empty(); ++i)
+                for (UINT i = 0; i < 26 && !edges.empty(); ++i)
                 {
                     for (std::list<Edge*>::iterator edge_it = edges.begin(); edge_it != edges.end();)
                     {
@@ -1321,11 +1326,11 @@ static void refine_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
 {
     bool* visited_tmp = new bool[sizes.size_enlarged];
     memset(visited_tmp, 0, sizes.size_enlarged * sizeof(bool));
-    int np[26];
-    int ind;
-    int front, back;
+    UINT np[26];
+    UINT ind;
+    UINT front, back;
 
-    for (int i = 0; i < sizes.size_enlarged; ++i)
+    for (UINT i = 0; i < sizes.size_enlarged; ++i)
     {
         // for each edges non visited yet
         if(voxel_ids[i].second)
@@ -1337,7 +1342,7 @@ static void refine_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
             if(!visited_tmp[front])
             {
                 collect_26_neighbours(front, sizes, np);
-                for (int j = 0; j < 26; ++j)
+                for (UINT j = 0; j < 26; ++j)
                 {
                     if(voxel_ids[np[j]].first)
                     {
@@ -1355,7 +1360,7 @@ static void refine_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
                 }
 
                 collect_26_neighbours(back, sizes, np);
-                for (int j = 0; j < 26; ++j)
+                for (UINT j = 0; j < 26; ++j)
                 {
                     if(voxel_ids[np[j]].first)
                     {
@@ -1389,13 +1394,12 @@ static void remove_small_branches(const Sizes& sizes, std::pair<Node*, Edge*>* v
 {
     bool* visited_tmp = new bool[sizes.size_enlarged];
     memset(visited_tmp, 0, sizes.size_enlarged * sizeof(bool));
-    int np[26];
     Edge* edge;
     Node* node_front;
     Node* node_back;
-    int ind, back;
+    UINT ind, back;
 
-    for (int i = 0; i < sizes.size_enlarged; ++i)
+    for (UINT i = 0; i < sizes.size_enlarged; ++i)
     {
         node_front = 0;
         node_back = 0;
@@ -1414,7 +1418,7 @@ static void remove_small_branches(const Sizes& sizes, std::pair<Node*, Edge*>* v
                     // if the branch is too small, remove it
                     if (edge->length() < BRANCH_THRESHOLD)
                     {
-                        for (int j = 0; j < edge->data().size(); ++j)
+                        for (UINT j = 0; j < edge->data().size(); ++j)
                         {
                             ind = edge->data()[j];
                             voxel_ids[ind].second = 0;
@@ -1438,12 +1442,12 @@ static void remove_small_branches(const Sizes& sizes, std::pair<Node*, Edge*>* v
 **************************************************************************/
 static bool is_branch(const Edge* edge, Node*& node_back, Node*& node_front, const Sizes& sizes, const std::pair<Node*, Edge*>* voxel_ids)
 {
-    int np[26];
-    int edge_junctions = 0;
+    UINT np[26];
+    UINT edge_junctions = 0;
 
     /* if there is a node on the back of edge, get it. */
     collect_26_neighbours(edge->data().back(), sizes, np);
-    for (int j = 0; j < 26; ++j)
+    for (UINT j = 0; j < 26; ++j)
     {
         if (voxel_ids[np[j]].first)
         {
@@ -1455,7 +1459,7 @@ static bool is_branch(const Edge* edge, Node*& node_back, Node*& node_front, con
 
     /* if there is a node at the front of edge, get it. */
     collect_26_neighbours(edge->data().front(), sizes, np);
-    for (int j = 0; j < 26; ++j)
+    for (UINT j = 0; j < 26; ++j)
     {
         if (voxel_ids[np[j]].first && voxel_ids[np[j]].first != node_back)
         {
@@ -1484,13 +1488,12 @@ static void fusion_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
     bool* visited_tmp = new bool[sizes.size_enlarged];
     memset(visited_tmp, 0, sizes.size_enlarged * sizeof(bool));
     std::deque<int> queue;
-    int np[26];
     Edge* edge;
     Node* node_front;
     Node* node_back;
-    int ind, back;
+    UINT ind, back;
 
-    for (int i = 0; i < sizes.size_enlarged; ++i)
+    for (UINT i = 0; i < sizes.size_enlarged; ++i)
     {
         node_front = 0;
         node_back = 0;
@@ -1509,7 +1512,7 @@ static void fusion_nodes(const Sizes& sizes, std::pair<Node*, Edge*>* voxel_ids)
                     // if the edge is too small, replace it by the front node
                     if (edge->length() < EDGE_THRESHOLD)
                     {
-                        for (int j = 0; j < edge->data().size(); ++j)
+                        for (UINT j = 0; j < edge->data().size(); ++j)
                         {
                             ind = edge->data()[j];
                             voxel_ids[ind].second = 0;
