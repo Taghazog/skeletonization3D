@@ -1,0 +1,7 @@
+#ifndef _BUILD_INFO_HPP_
+#define _BUILD_INFO_HPP_
+
+#include <cstdint>
+typedef @UINT@ UINT;
+
+#endif //_BUILD_INFO_HPP_
