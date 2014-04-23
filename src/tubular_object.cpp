@@ -530,7 +530,7 @@ int Tubular_object::dump_infos()
     myfile << " *********************************************************************************\n\n";
 
     myfile << "Name of input image data file: " << mFilename << std::endl;
-    myfile << "Image Dimensions: " << mSizes.size_x << " " << mSizes.size_y << " " << mSizes.size_y << std::endl;
+    myfile << "Image Dimensions: " << mSizes.size_x << " " << mSizes.size_y << " " << mSizes.size_z << std::endl;
     myfile << "Voxel width: " << mDsr->dime.pixdim[1] << "mm (should be isotropic in x, y and z directions)\n";
 
     myfile << "Number of Trabeculae: " << number_of_trabeculae() << std::endl;
