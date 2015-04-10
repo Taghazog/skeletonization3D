@@ -1,6 +1,6 @@
 Overview
 ---------
-The goal of this little project is to skeletonize tubular objects from a binary 3D image, and find information from the skeleton.
+The goal of this little project is to skeletonize tubular objects from a binary 3D image, and extract information from the skeleton.
 
 Dependencies
 ------------
